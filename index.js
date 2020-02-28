@@ -88,6 +88,10 @@ function createGraph(graph) {
   return graph;
 }
 
+/**
+ * 生成代码
+ * @param {*} graph 完整依赖关系图
+ */
 function generateCode(graph) {
   let modules = '';
   Object.entries(graph).forEach(([filename, asset]) => {
@@ -115,6 +119,10 @@ function generateCode(graph) {
 `;
 }
 
+/**
+ * 输出bundle
+ * @param {string} str 代码字符串
+ */
 function createBundle(str) {
   const { path, filename } = config.output;
   fs.writeFile(`${path}/${filename}`, str, err => {
