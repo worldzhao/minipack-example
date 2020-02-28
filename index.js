@@ -88,9 +88,35 @@ function createGraph(graph) {
   return graph;
 }
 
-/**
- * 入口文件内容及其依赖
- */
-const mainAssert = createAsset(entry);
+function generateCode(graph) {
+  let modules = '';
+  Object.entries(graph).forEach(([filename, asset]) => {
+    modules += `'${filename}':[
+      function(require,module,exports){
+        ${asset.code}
+      },
+      ${JSON.stringify(asset.mapping)}
+    ],`;
+  });
 
-console.log(createGraph({ [entry]: mainAssert }));
+  return `
+  (function(modules) {
+    function require(moduleId) {
+      const [fn, mapping] = modules[moduleId]
+      function localRequire(name) {
+        return require(mapping[name])
+      }
+      const module = {exports: {}}
+      fn(localRequire, module, module.exports)
+      return module.exports
+    }
+    require('${entry}')
+  })({${modules}})
+`;
+}
+
+const mainAsset = createAsset(entry);
+
+const graph = createGraph({ [entry]: mainAsset });
+
+const code = generateCode(graph);
