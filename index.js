@@ -115,8 +115,22 @@ function generateCode(graph) {
 `;
 }
 
-const mainAsset = createAsset(entry);
+function createBundle(str) {
+  const { path, filename } = config.output;
+  fs.writeFile(`${path}/${filename}`, str, err => {
+    if (err) throw err;
+    console.log('打包成功');
+  });
+}
 
-const graph = createGraph({ [entry]: mainAsset });
+function main() {
+  const mainAsset = createAsset(entry);
 
-const code = generateCode(graph);
+  const graph = createGraph({ [entry]: mainAsset });
+
+  const code = generateCode(graph);
+
+  createBundle(code);
+}
+
+main();
