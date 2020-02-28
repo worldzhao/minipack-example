@@ -59,40 +59,33 @@ function createAsset(filename) {
 /**
  * 创建依赖关系图
  */
-
 function createGraph(graph) {
-  Object.entries(graph).forEach(([filename, assert]) => recursionDep(filename, assert));
+  const stack = Object.entries(graph);
 
-  return graph;
-
-  /**
-   * 递归遍历，获取所有的依赖，其实就是深度优先遍历 可以用栈处理
-   * @param {string} filename 文件路径
-   * @param {Result} assert
-   */
-  function recursionDep(filename, assert) {
-    // 当前文件依赖的路径映射关系 相对=>绝对
+  while (stack.length) {
+    // 出栈
+    const [filename, assert] = stack.pop();
+    // 当前文件的依赖文件的路径映射关系 相对路径=>绝对绝对路径
     assert.mapping = {};
-    /**
-     * 将依赖相对路径转为绝对路径
-     */
     // 获取当前文件所在文件夹绝对路径
     const dirname = path.dirname(filename);
-
     assert.dependencies.forEach(depRelativePath => {
-      // 获取依赖文件绝对路径
+      // 依赖文件绝对路径
       const depAbsolutePath = path.join(dirname, depRelativePath);
-      // 完成映射
+      // 完成路径映射
       assert.mapping[depRelativePath] = depAbsolutePath;
-      // 若依赖图中暂时不存在该依赖，将其放入依赖图
-      if (!(depAbsolutePath in graph)) {
-        const depAsset = createAsset(depAbsolutePath);
-        graph[depAbsolutePath] = depAsset;
-        // 递归操作依赖的依赖
-        depAsset.dependencies.length && recursionDep(depAbsolutePath, depAsset);
+      // 若当前依赖图中不存在该依赖文件
+      if (!Object.keys(graph).includes(depAbsolutePath)) {
+        const depAssert = createAsset(depAbsolutePath);
+        // 依赖图新增节点
+        graph[depAbsolutePath] = depAssert;
+        // 若该依赖文件存在依赖 入栈重复过程 完成依赖映射以及节点新增
+        depAssert.dependencies.length && stack.push([depAbsolutePath, depAssert]);
       }
     });
   }
+
+  return graph;
 }
 
 /**
